@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Signature de devis</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600&family=DM+Sans:wght@400;500;600&family=Fraunces:wght@500;600&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#2b2721;--muted:#6b6458;--line:#e4dccd;--bg:#f6f2ea;--card:#fffdf8;--gold:#8a6a2c;--ok:#1f5a3d;--okbg:#dcebe1;--warn:#6b4e12;--warnbg:#f6e8c8;--err:#8c2f2f}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'DM Sans',system-ui,sans-serif;line-height:1.5}
+.wrap{max-width:760px;margin:0 auto;padding:32px 16px 56px;display:flex;flex-direction:column;gap:20px}
+.eyebrow{font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+h1{margin:4px 0 0;font-family:'Fraunces',serif;font-weight:600;font-size:30px;line-height:1.2}
+h2{margin:0;font-size:16px;font-weight:600}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:20px 24px;display:flex;flex-direction:column;gap:14px}
+.row{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.muted{color:var(--muted);font-size:14px}
+.tot{border-top:1px solid var(--line);padding-top:12px;display:flex;flex-direction:column;gap:6px;font-size:15px}
+.tot div{display:flex;justify-content:space-between}
+.tot .ttc{font-weight:600;font-size:17px}
+label{font-size:13px;font-weight:500}
+input[type=text],textarea{width:100%;min-height:44px;border:1px solid #d8cfbd;border-radius:8px;padding:10px 12px;font:inherit;font-size:15px;background:#fff;color:var(--ink)}
+.f{display:flex;flex-direction:column;gap:6px}
+button{font:inherit;min-height:44px;padding:0 16px;border-radius:8px;border:1px solid #d8cfbd;background:#fff;color:var(--ink);cursor:pointer}
+button.primary{background:var(--ink);border-color:var(--ink);color:#fff;font-weight:600;min-height:48px;font-size:15px}
+button:disabled{opacity:.5;cursor:not-allowed}
+button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.tabs{display:flex;gap:8px;flex-wrap:wrap}
+.pad{border:1.5px dashed #b9ad94;border-radius:10px;background:#fff;touch-action:none;width:100%;height:150px;display:block;cursor:crosshair}
+.chk{display:flex;gap:10px;align-items:flex-start;font-size:14px;font-weight:400;line-height:1.5}
+.chk input{width:20px;height:20px;margin:2px 0 0;accent-color:var(--gold);flex-shrink:0}
+.small{font-size:12px;color:var(--muted);margin:0}
+.err{color:var(--err);font-size:14px;margin:0}
+iframe{width:100%;height:480px;border:1px solid var(--line);border-radius:8px;background:#fff}
+.pill{display:inline-block;border-radius:999px;padding:4px 12px;font-size:13px;font-weight:500}
+.pill.ok{background:var(--okbg);color:var(--ok)}.pill.warn{background:var(--warnbg);color:var(--warn)}
+.proof div.l{display:flex;gap:14px;padding:10px 0;border-bottom:1px solid #eee6d6;font-size:14px}
+.proof div.l:last-child{border-bottom:0}
+.proof span.k{flex:0 0 150px;font-size:13px;color:var(--muted)}
+.mono{font-family:ui-monospace,Menlo,monospace;word-break:break-all}
+.check{width:56px;height:56px;border-radius:50%;background:var(--okbg);display:flex;align-items:center;justify-content:center}
+.hide{display:none!important}
+@media print{body{background:#fff}.noprint{display:none!important}.card{border:0;padding:0}}
+@media (max-width:520px){.proof div.l{flex-direction:column;gap:2px}.proof span.k{flex:none}}
+</style>
+</head>
+<body>
+<div class="wrap" id="root"><p class="muted">Chargement…</p></div>
+<script>
+(function(){
+var SB='https://omabjqthwjiakqimbvzp.supabase.co';
+var KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9tYWJqcXRod2ppYWtxaW1idnpwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ5OTM2OTUsImV4cCI6MjEwMDU2OTY5NX0.G5m_oZDIsM-C_Sb4aAr00KylVF_GgbatoWw-pRwP_qE';
+var root=document.getElementById('root');
+var token=(location.hash||'').replace(/^#\/?/,'').replace(/^t=/,'').trim();
+var D=null, mode='draw', hasInk=false, typedName='';
+
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
+function eur(n){return (Number(n)||0).toLocaleString('fr-FR',{minimumFractionDigits:2,maximumFractionDigits:2})+' €'}
+function fdt(iso){if(!iso)return '—';var d=new Date(iso);return d.toLocaleDateString('fr-FR')+' à '+d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})}
+function rpc(fn,args){
+  return fetch(SB+'/rest/v1/rpc/'+fn,{method:'POST',headers:{'apikey':KEY,'Authorization':'Bearer '+KEY,'Content-Type':'application/json'},body:JSON.stringify(args)})
+    .then(function(r){return r.json().then(function(j){if(!r.ok)throw new Error((j&&j.message)||'Erreur');return j})});
+}
+function head(r){
+  return '<div><div class="eyebrow">'+esc(r.campingNom||'Sandaya')+'</div><h1>'+esc('')+'</h1></div>';
+}
+function simple(title,text,eyebrow){
+  root.innerHTML='<div><div class="eyebrow">'+esc(eyebrow||'Signature de devis')+'</div><h1>'+esc(title)+'</h1></div><div class="card"><p style="margin:0">'+esc(text)+'</p></div>';
+}
+function resumeCard(d){
+  var r=d.resume||{};
+  return '<div class="card"><div class="row"><div><div style="font-weight:600;font-size:17px">Devis '+esc(d.numero)+'</div><div class="muted">'+esc(r.evenement||'')+(r.dates?' · '+esc(r.dates):'')+'</div></div>'+
+   (d.expires_at?'<span class="muted">Valable jusqu\'au '+new Date(d.expires_at).toLocaleDateString('fr-FR')+'</span>':'')+'</div>'+
+   '<div class="tot"><div><span class="muted">Total HT</span><span>'+eur(r.ht)+'</span></div><div><span class="muted">TVA</span><span>'+eur(r.tva)+'</span></div><div class="ttc"><span>Total TTC</span><span>'+eur(r.ttc)+'</span></div></div>'+
+   '<iframe sandbox title="Devis '+esc(d.numero)+'" id="frm"></iframe>'+
+   '<div><button type="button" id="open">Ouvrir le devis dans un nouvel onglet</button></div></div>';
+}
+function bindFrame(d){
+  var f=document.getElementById('frm'); if(f) f.srcdoc=d.html;
+  var o=document.getElementById('open'); if(o) o.onclick=function(){
+    var b=new Blob([d.html],{type:'text/html'}); window.open(URL.createObjectURL(b),'_blank');
+  };
+}
+function signedView(d,extra){
+  var r=d.resume||{};
+  root.innerHTML='<div style="display:flex;flex-direction:column;gap:14px;align-items:flex-start"><div class="check"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#1f5a3d" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div>'+
+   '<div><div class="eyebrow">'+esc(r.campingNom||'Sandaya')+'</div><h1>'+(extra&&extra.justNow?'Merci, votre devis est signé':'Ce devis est déjà signé')+'</h1></div>'+
+   '<p style="margin:0">Le devis '+esc(d.numero)+' est accepté. Le camping a été informé.</p>'+
+   '<button type="button" class="noprint primary" onclick="window.print()">Imprimer ou enregistrer en PDF</button></div>'+
+   '<div class="card proof"><h2>Dossier de preuve</h2>'+
+   '<div class="l"><span class="k">Signé par</span><span>'+esc(d.signer_nom||'')+'</span></div>'+
+   '<div class="l"><span class="k">Date et heure</span><span>'+fdt(d.signed_at)+'</span></div>'+
+   '<div class="l"><span class="k">Montant accepté</span><span>'+eur(r.ttc)+' TTC</span></div>'+
+   '<div class="l"><span class="k">Empreinte du devis</span><span class="mono">SHA-256 · '+esc(d.doc_hash||'')+'</span></div></div>';
+}
+function formView(){
+  var d=D, r=d.resume||{};
+  root.innerHTML='<div><div class="eyebrow">'+esc(r.campingNom||'Sandaya')+'</div><h1>Votre devis est prêt à être signé</h1></div>'+
+   resumeCard(d)+
+   '<div class="card" id="sg"><h2>Accepter ce devis</h2>'+
+   '<div class="f"><label for="nom">Nom et prénom du signataire *</label><input type="text" id="nom" autocomplete="name" value="'+esc(r.clientNom||'')+'"></div>'+
+   '<div class="f"><label for="fn">Fonction (facultatif)</label><input type="text" id="fn" autocomplete="organization-title"></div>'+
+   '<div class="f"><span style="font-size:13px;font-weight:500">Signature *</span>'+
+   '<div class="tabs"><button type="button" id="m1" class="on">Tracer</button><button type="button" id="m2">Taper mon nom</button><button type="button" id="clr">Effacer</button></div>'+
+   '<canvas id="pad" class="pad" aria-label="Zone de signature"></canvas></div>'+
+   '<label class="chk"><input type="checkbox" id="ok"><span>Bon pour accord. J\'ai pris connaissance du devis '+esc(d.numero)+' et de ses conditions, et je l\'accepte pour un montant de '+eur(r.ttc)+' TTC.</span></label>'+
+   '<p class="err hide" id="er"></p>'+
+   '<div class="row" style="gap:10px"><button type="button" class="primary" id="go" style="flex:1 1 260px">Accepter et signer le devis</button><button type="button" id="mod">Demander une modification</button></div>'+
+   '<p class="small">En signant, la date, l\'heure et l\'adresse IP de votre appareil sont enregistrées avec une empreinte du document, pour attester de votre accord.</p></div>'+
+   '<div class="card hide" id="mc"><h2>Demander une modification</h2><div class="f"><label for="msg">Votre message au camping</label><textarea id="msg" rows="4"></textarea></div><p class="err hide" id="er2"></p><div class="row" style="gap:10px;justify-content:flex-start"><button type="button" class="primary" id="sendmod">Envoyer ma demande</button><button type="button" id="cancelmod">Retour</button></div></div>';
+  bindFrame(d); initPad();
+  document.getElementById('go').onclick=sign;
+  document.getElementById('mod').onclick=function(){document.getElementById('mc').classList.remove('hide');document.getElementById('msg').focus()};
+  document.getElementById('cancelmod').onclick=function(){document.getElementById('mc').classList.add('hide')};
+  document.getElementById('sendmod').onclick=sendMod;
+}
+var cv,cx,drawing=false;
+function fitCanvas(){
+  var r=cv.getBoundingClientRect(),k=window.devicePixelRatio||1;
+  cv.width=Math.round(r.width*k);cv.height=Math.round(r.height*k);
+  cx=cv.getContext('2d');cx.scale(k,k);cx.lineWidth=2.4;cx.lineCap='round';cx.lineJoin='round';cx.strokeStyle='#26324a';
+}
+function clearPad(){cx.save();cx.setTransform(1,0,0,1,0,0);cx.clearRect(0,0,cv.width,cv.height);cx.restore();hasInk=false}
+function drawTyped(){
+  var n=(document.getElementById('nom').value||'').trim();
+  clearPad(); if(!n)return;
+  var r=cv.getBoundingClientRect(),size=64;
+  cx.fillStyle='#26324a';cx.font='600 '+size+'px Caveat, cursive';
+  while(cx.measureText(n).width>r.width-24&&size>20){size-=4;cx.font='600 '+size+'px Caveat, cursive'}
+  cx.textBaseline='middle';cx.textAlign='center';cx.fillText(n,r.width/2,r.height/2);hasInk=true;
+}
+function initPad(){
+  cv=document.getElementById('pad');fitCanvas();mode='draw';hasInk=false;
+  function pt(e){var r=cv.getBoundingClientRect();return {x:e.clientX-r.left,y:e.clientY-r.top}}
+  cv.addEventListener('pointerdown',function(e){if(mode!=='draw')return;drawing=true;cv.setPointerCapture(e.pointerId);var p=pt(e);cx.beginPath();cx.moveTo(p.x,p.y);cx.lineTo(p.x+.1,p.y+.1);cx.stroke();hasInk=true;e.preventDefault()});
+  cv.addEventListener('pointermove',function(e){if(!drawing)return;var p=pt(e);cx.lineTo(p.x,p.y);cx.stroke();e.preventDefault()});
+  ['pointerup','pointercancel'].forEach(function(t){cv.addEventListener(t,function(){drawing=false})});
+  var m1=document.getElementById('m1'),m2=document.getElementById('m2');
+  m1.onclick=function(){mode='draw';m1.className='on';m2.className='';clearPad()};
+  m2.onclick=function(){mode='type';m2.className='on';m1.className='';cv.style.cursor='default';drawTyped()};
+  document.getElementById('nom').addEventListener('input',function(){if(mode==='type')drawTyped()});
+  document.getElementById('clr').onclick=function(){clearPad();if(mode==='type')drawTyped()};
+}
+function showErr(id,t){var e=document.getElementById(id);e.textContent=t;e.classList.remove('hide')}
+function sign(){
+  var nom=document.getElementById('nom').value.trim();
+  document.getElementById('er').classList.add('hide');
+  if(nom.length<2)return showErr('er','Indiquez votre nom et prénom.');
+  if(!hasInk)return showErr('er',mode==='draw'?'Tracez votre signature dans le cadre.':'Indiquez votre nom pour générer la signature.');
+  if(!document.getElementById('ok').checked)return showErr('er','Cochez la case « Bon pour accord » pour continuer.');
+  var btn=document.getElementById('go');btn.disabled=true;btn.textContent='Enregistrement…';
+  var img=cv.toDataURL('image/png');
+  rpc('sig_public_sign',{p_token:token,p_nom:nom,p_fonction:document.getElementById('fn').value.trim(),p_img:img}).then(function(res){
+    if(!res||!res.ok){btn.disabled=false;btn.textContent='Accepter et signer le devis';return showErr('er',res&&res.error?('Signature impossible : '+res.error):'Signature impossible.')}
+    D.signer_nom=nom;D.signed_at=res.signed_at;D.doc_hash=res.doc_hash;signedView(D,{justNow:true});window.scrollTo(0,0);
+  }).catch(function(e){btn.disabled=false;btn.textContent='Accepter et signer le devis';showErr('er','Connexion impossible, réessayez dans un instant.')});
+}
+function sendMod(){
+  var m=document.getElementById('msg').value.trim();
+  if(m.length<3)return showErr('er2','Écrivez votre demande.');
+  rpc('sig_public_modif',{p_token:token,p_message:m}).then(function(res){
+    if(res&&res.ok)simple('Demande envoyée','Votre demande de modification a bien été transmise au camping, qui vous enverra un nouveau devis.',(D.resume||{}).campingNom);
+    else showErr('er2','Envoi impossible : '+((res&&res.error)||''));
+  }).catch(function(){showErr('er2','Connexion impossible, réessayez dans un instant.')});
+}
+if(!token||token.length<20){simple('Lien invalide','Ce lien de signature est incomplet. Ouvrez-le depuis le mail reçu.')}
+else rpc('sig_public_get',{p_token:token}).then(function(d){
+  if(!d||!d.ok){return simple('Lien introuvable','Ce lien de signature n\'existe pas ou a été supprimé.')}
+  D=d;var cn=(d.resume||{}).campingNom;
+  if(d.statut==='signé')return signedView(d);
+  if(d.statut==='expiré')return simple('Lien expiré','Ce lien n\'est plus valable. Contactez le camping pour recevoir un nouveau devis.',cn);
+  if(d.statut==='annulé')return simple('Lien remplacé','Ce devis a été remplacé par une version plus récente. Utilisez le dernier mail reçu du camping.',cn);
+  if(d.statut==='modification')return simple('Demande déjà transmise','Votre demande de modification a été transmise au camping.',cn);
+  formView();
+}).catch(function(){simple('Connexion impossible','Le service est momentanément indisponible. Réessayez dans un instant.')});
+window.addEventListener('resize',function(){});
+})();
+</script>
+</body>
+</html>
