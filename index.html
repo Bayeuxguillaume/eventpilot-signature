@@ -65,7 +65,7 @@ function rpc(fn,args){
     .then(function(r){return r.json().then(function(j){if(!r.ok)throw new Error((j&&j.message)||'Erreur');return j})});
 }
 function head(r){
-  return '<div><div class="eyebrow">'+esc(r.campingNom||'Sandaya')+'</div><h1>'+esc('')+'</h1></div>';
+  return '<div><div class="eyebrow">'+esc(r.campingNom||'')+'</div><h1>'+esc('')+'</h1></div>';
 }
 function simple(title,text,eyebrow){
   root.innerHTML='<div><div class="eyebrow">'+esc(eyebrow||'Signature de devis')+'</div><h1>'+esc(title)+'</h1></div><div class="card"><p style="margin:0">'+esc(text)+'</p></div>';
@@ -87,7 +87,7 @@ function bindFrame(d){
 function signedView(d,extra){
   var r=d.resume||{};
   root.innerHTML='<div style="display:flex;flex-direction:column;gap:14px;align-items:flex-start"><div class="check"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#1f5a3d" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div>'+
-   '<div><div class="eyebrow">'+esc(r.campingNom||'Sandaya')+'</div><h1>'+(extra&&extra.justNow?'Merci, votre devis est signé':'Ce devis est déjà signé')+'</h1></div>'+
+   '<div><div class="eyebrow">'+esc(r.campingNom||'')+'</div><h1>'+(extra&&extra.justNow?'Merci, votre devis est signé':'Ce devis est déjà signé')+'</h1></div>'+
    '<p style="margin:0">Le devis '+esc(d.numero)+' est accepté. Le camping a été informé.</p>'+
    '<button type="button" class="noprint primary" onclick="window.print()">Imprimer ou enregistrer en PDF</button></div>'+
    '<div class="card proof"><h2>Dossier de preuve</h2>'+
@@ -98,7 +98,7 @@ function signedView(d,extra){
 }
 function formView(){
   var d=D, r=d.resume||{};
-  root.innerHTML='<div><div class="eyebrow">'+esc(r.campingNom||'Sandaya')+'</div><h1>Votre devis est prêt à être signé</h1></div>'+
+  root.innerHTML='<div><div class="eyebrow">'+esc(r.campingNom||'')+'</div><h1>Votre devis est prêt à être signé</h1></div>'+
    resumeCard(d)+
    '<div class="card" id="sg"><h2>Accepter ce devis</h2>'+
    '<div class="f"><label for="nom">Nom et prénom du signataire *</label><input type="text" id="nom" autocomplete="name" value="'+esc(r.clientNom||'')+'"></div>'+
