@@ -110,7 +110,7 @@ function formView(){
    '<p class="err hide" id="er"></p>'+
    '<div class="row" style="gap:10px"><button type="button" class="primary" id="go" style="flex:1 1 260px">Accepter et signer le devis</button><button type="button" id="mod">Demander une modification</button></div>'+
    '<p class="small">En signant, la date, l\'heure et l\'adresse IP de votre appareil sont enregistrées avec une empreinte du document, pour attester de votre accord.</p></div>'+
-   '<div class="card hide" id="mc"><h2>Demander une modification</h2><div class="f"><label for="msg">Votre message au camping</label><textarea id="msg" rows="4"></textarea></div><p class="err hide" id="er2"></p><div class="row" style="gap:10px;justify-content:flex-start"><button type="button" class="primary" id="sendmod">Envoyer ma demande</button><button type="button" id="cancelmod">Retour</button></div></div>';
+   '<div class="card hide" id="mc"><h2>Demander une modification</h2><div class="f"><label for="msg">Votre message à l\'établissement</label><textarea id="msg" rows="4"></textarea></div><p class="err hide" id="er2"></p><div class="row" style="gap:10px;justify-content:flex-start"><button type="button" class="primary" id="sendmod">Envoyer ma demande</button><button type="button" id="cancelmod">Retour</button></div></div>';
   bindFrame(d); initPad();
   document.getElementById('go').onclick=sign;
   document.getElementById('mod').onclick=function(){document.getElementById('mc').classList.remove('hide');document.getElementById('msg').focus()};
@@ -162,7 +162,7 @@ function sendMod(){
   var m=document.getElementById('msg').value.trim();
   if(m.length<3)return showErr('er2','Écrivez votre demande.');
   rpc('sig_public_modif',{p_token:token,p_message:m}).then(function(res){
-    if(res&&res.ok)simple('Demande envoyée','Votre demande de modification a bien été transmise au camping, qui vous enverra un nouveau devis.',(D.resume||{}).campingNom);
+    if(res&&res.ok)simple('Demande envoyée','Votre demande de modification a bien été transmise à l\'établissement, qui vous enverra un nouveau devis.',(D.resume||{}).campingNom);
     else showErr('er2','Envoi impossible : '+((res&&res.error)||''));
   }).catch(function(){showErr('er2','Connexion impossible, réessayez dans un instant.')});
 }
@@ -171,7 +171,7 @@ else rpc('sig_public_get',{p_token:token}).then(function(d){
   if(!d||!d.ok){return simple('Lien introuvable','Ce lien de signature n\'existe pas ou a été supprimé.')}
   D=d;var cn=(d.resume||{}).campingNom;
   if(d.statut==='signé')return signedView(d);
-  if(d.statut==='expiré')return simple('Lien expiré','Ce lien n\'est plus valable. Contactez le camping pour recevoir un nouveau devis.',cn);
+  if(d.statut==='expiré')return simple('Lien expiré','Ce lien n\'est plus valable. Contactez l\'établissement pour recevoir un nouveau devis.',cn);
   if(d.statut==='annulé')return simple('Lien remplacé','Ce devis a été remplacé par une version plus récente. Utilisez le dernier mail reçu du camping.',cn);
   if(d.statut==='modification')return simple('Demande déjà transmise','Votre demande de modification a été transmise au camping.',cn);
   formView();
